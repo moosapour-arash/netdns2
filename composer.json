@@ -21,6 +21,8 @@
         "php": ">=5.1.2"
     },
     "autoload": {
-        "psr-0": { "Net_DNS2": "" }
+        "psr-4": {
+            "Netdns2\\": "src/Netdns2/"
+        }
     }
 }
