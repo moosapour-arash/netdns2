@@ -1,4 +1,4 @@
-# Net\_DNS2 - Native PHP5 DNS Resolver and Updater #
+# NetDns2 - Native PHP5 DNS Resolver and Updater by Mike Pultz #
 
 ### The main features for this package include: ###
 
@@ -14,27 +14,28 @@
 
 ## Installing Net\_DNS2 ##
 
-You can download it directly from PEAR: http://pear.php.net/package/Net_DNS2
+You can require it directly via Composer: https://packagist.org/packages/orgoth/netdns2
 
 ```
-pear install Net_DNS2
-```
-
-Or you can require it directly via Composer: https://packagist.org/packages/pear/net_dns2
-
-```
-composer require pear/net_dns2
+composer require orgoth/netdns2
 ```
 
 Or download the source above.
 
 ## Requirements ##
 
-* PHP 5.1.2+
+* PHP 5.5.0+
 * The PHP INI setting `mbstring.func_overload` equals 0, 1, 4, or 5.
 
 
-## Using Net\_DNS2 ##
+## Using NetDns2 ##
 
-See the Net\_DNS2 Website for more details - https://netdns2.com/
+See the NetDns2 Website for more details - https://netdns2.com/
 
+## Credits ##
+
+All credits for the amazing work belongs to Mike Pultz.
+
+## Notice ##
+
+I have only ported the scripts to PSR-4. 
