@@ -1,5 +1,5 @@
 {
-    "name": "Orgoth/netdns2",
+    "name": "orgoth/netdns2",
     "type": "library",
     "description": "Native PHP5 DNS Resolver and Updater Library",
     "keywords": ["dns","network"],
