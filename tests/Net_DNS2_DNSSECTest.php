@@ -50,7 +50,8 @@
  *
  */
 
-require_once '../Net/DNS2.php';
+use NetDns2\Resolver;
+use NetDns2\RR\OPT;
 
 /**
  * Test class to test the DNSSEC logic
@@ -75,16 +76,14 @@ class Net_DNS2_DNSSECTest extends PHPUnit_Framework_TestCase
     {
         $ns = array('8.8.8.8', '8.8.4.4');
 
-        $r = new Net_DNS2_Resolver(array('nameservers' => $ns));
+        $r = new Resolver(array('nameservers' => $ns));
 
         $r->dnssec = true;
 
         $result = $r->query('org', 'SOA', 'IN');
 print_r($result);
         $this->assertTrue(($result->header->ad == 1));
-        $this->assertTrue(($result->additional[0] instanceof Net_DNS2_RR_OPT));
+        $this->assertTrue(($result->additional[0] instanceof OPT));
         $this->assertTrue(($result->additional[0]->do == 1));
     }
 };
-
-?>

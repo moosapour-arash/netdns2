@@ -56,10 +56,6 @@ if (!defined('PHPUNIT_MAIN_METHOD')) {
     define('PHPUNIT_MAIN_METHOD', 'Net_DNS2_AllTests::main');
 }
 
-require_once 'Net_DNS2_ParserTest.php';
-require_once 'Net_DNS2_ResolverTest.php';
-require_once 'Net_DNS2_DNSSECTest.php';
-
 set_include_path('..:.');
 
 /**
@@ -110,5 +106,3 @@ class Net_DNS2_AllTests
 if (PHPUNIT_MAIN_METHOD == 'Net_DNS2_AllTests::main') {
     Net_DNS2_AllTests::main();
 }
-
-?>

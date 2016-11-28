@@ -49,8 +49,9 @@
  * @since     File available since Release 1.0.0
  *
  */
-
-require_once '../Net/DNS2.php';
+use NetDns2\Lookups;
+use NetDns2\Resolver;
+use NetDns2\RR\MX;
 
 /**  
  * This test uses the Google public DNS servers to perform a resolution test; 
@@ -76,15 +77,13 @@ class Net_DNS2_ResolverTest extends PHPUnit_Framework_TestCase
     {
         $ns = array('8.8.8.8', '8.8.4.4');
 
-        $r = new Net_DNS2_Resolver(array('nameservers' => $ns));
+        $r = new Resolver(array('nameservers' => $ns));
 
         $result = $r->query('google.com', 'MX');
 
-        $this->assertSame($result->header->qr, Net_DNS2_Lookups::QR_RESPONSE);
+        $this->assertSame($result->header->qr, Lookups::QR_RESPONSE);
         $this->assertSame(count($result->question), 1);
         $this->assertTrue(count($result->answer) > 0);
-        $this->assertTrue($result->answer[0] instanceof Net_DNS2_RR_MX);
+        $this->assertTrue($result->answer[0] instanceof MX);
     }
 }
-
-?>
