@@ -130,7 +130,7 @@ class NSAP extends \NetDns2\RR
         //
         // make sure the afi value is 47
         //
-        if ($x['afi'] == 47) {
+        if ($x['afi'] == '47') {
 
             $this->afi  = '0x' . $x['afi'];
             $this->idi  = $x['idi'];
@@ -169,7 +169,7 @@ class NSAP extends \NetDns2\RR
             //
             // we only support AFI 47- there arent' any others defined.
             //
-            if ($this->afi == 47) {
+            if ($this->afi == '47') {
 
                 //
                 // unpack the rest of the values
@@ -212,7 +212,7 @@ class NSAP extends \NetDns2\RR
      */
     protected function rrGet(\NetDns2\Packet &$packet)
     {
-        if ($this->afi == 0x47) {
+        if ($this->afi == '0x47') {
 
             //
             // build the aa field
