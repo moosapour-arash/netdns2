@@ -96,6 +96,14 @@ class Shm extends Cache
         $this->cache_serializer = $serializer;
 
         //
+        // if we've already loaded the cache data, then just return right away
+        //
+        if ($this->cache_opened == true)
+        {
+            return;
+        }
+
+        //
         // make sure the file exists first
         //
         if (!file_exists($cache_file)) {
@@ -166,6 +174,11 @@ class Shm extends Cache
                     // call clean to clean up old entries
                     //
                     $this->clean();
+
+                    //
+                    // mark the cache as loaded, so we don't load it more than once
+                    //
+                    $this->cache_opened = true;
                 }
             }
         }
