@@ -229,7 +229,7 @@ class Question
 
         $data = $packet->compress($this->qname, $packet->offset);
 
-        $data .= chr($type << 8) . chr($type) . chr($class << 8) . chr($class);
+        $data .= chr($type >> 8) . chr($type) . chr($class >> 8) . chr($class);
         $packet->offset += 4;
 
         return $data;

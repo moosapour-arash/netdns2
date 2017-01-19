@@ -241,7 +241,7 @@ class NetDns2
     /*
      * local sockets
      */
-    protected $sock = array('udp' => array(), 'tcp' => array());
+    protected $sock = array(Socket::SOCK_DGRAM => array(), Socket::SOCK_STREAM => array());
 
     /*
      * if the socket extension is loaded
@@ -1053,6 +1053,45 @@ class NetDns2
     }
 
     /**
+     * cleans up a failed socket and throws the given exception
+     *
+     * @param string  $_proto the protocol of the socket
+     * @param string  $_ns    the name server to use for the request
+     * @param string  $_error the error message to throw at the end of the function
+     *
+     * @throws NetDns2Exception
+     * @access private
+     *
+     */
+    private function generateError($_proto, $_ns, $_error)
+    {
+        if (isset($this->sock[$_proto][$_ns]) == false)
+        {
+            throw new NetDns2Exception('invalid socket referenced', Lookups::E_NS_INVALID_SOCKET);
+        }
+
+        //
+        // grab the last error message off the socket
+        //
+        $last_error = $this->sock[$_proto][$_ns]->last_error;
+
+        //
+        // close it
+        //
+        $this->sock[$_proto][$_ns]->close();
+
+        //
+        // remove it from the socket cache
+        //
+        unset($this->sock[$_proto][$_ns]);
+
+        //
+        // throw the error provided
+        //
+        throw new NetDns2Exception($last_error, $_error);
+    }
+
+    /**
      * sends a DNS request using TCP
      *
      * @param string  $_ns   the name server to use for the request
@@ -1075,8 +1114,8 @@ class NetDns2
         // see if we already have an open socket from a previous request; if so, try to use
         // that instead of opening a new one.
         //
-        if ( (!isset($this->sock['tcp'][$_ns]))
-            || (!($this->sock['tcp'][$_ns] instanceof Socket))
+        if ( (!isset($this->sock[Socket::SOCK_STREAM][$_ns]))
+            || (!($this->sock[Socket::SOCK_STREAM][$_ns] instanceof Socket))
         ) {
 
             //
@@ -1084,7 +1123,7 @@ class NetDns2
             //
             if ($this->sockets_enabled === true) {
 
-                $this->sock['tcp'][$_ns] = new Sockets(
+                $this->sock[Socket::SOCK_STREAM][$_ns] = new Sockets(
                     Socket::SOCK_STREAM, $_ns, $this->dns_port, $this->timeout
                 );
 
@@ -1093,7 +1132,7 @@ class NetDns2
             //
             } else {
 
-                $this->sock['tcp'][$_ns] = new Streams(
+                $this->sock[Socket::SOCK_STREAM][$_ns] = new Streams(
                     Socket::SOCK_STREAM, $_ns, $this->dns_port, $this->timeout
                 );
             }
@@ -1103,7 +1142,7 @@ class NetDns2
             //
             if (strlen($this->local_host) > 0) {
 
-                $this->sock['tcp'][$_ns]->bindAddress(
+                $this->sock[Socket::SOCK_STREAM][$_ns]->bindAddress(
                     $this->local_host, $this->local_port
                 );
             }
@@ -1111,11 +1150,9 @@ class NetDns2
             //
             // open the socket
             //
-            if ($this->sock['tcp'][$_ns]->open() === false) {
+            if ($this->sock[Socket::SOCK_STREAM][$_ns]->open() === false) {
 
-                throw new NetDns2Exception(
-                    $this->sock['tcp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-                );
+                $this->generateError(Socket::SOCK_STREAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
             }
         }
 
@@ -1123,11 +1160,9 @@ class NetDns2
         // write the data to the socket; if it fails, continue on
         // the while loop
         //
-        if ($this->sock['tcp'][$_ns]->write($_data) === false) {
+        if ($this->sock[Socket::SOCK_STREAM][$_ns]->write($_data) === false) {
 
-            throw new NetDns2Exception(
-                $this->sock['tcp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-            );
+            $this->generateError(Socket::SOCK_STREAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
         }
 
         //
@@ -1149,12 +1184,19 @@ class NetDns2
                 //
                 // read the data off the socket
                 //
-                $result = $this->sock['tcp'][$_ns]->read($size, ($this->dnssec == true) ? $this->dnssec_payload_size : Lookups::DNS_MAX_UDP_SIZE);
+                $result = $this->sock[Socket::SOCK_STREAM][$_ns]->read($size, ($this->dnssec == true) ? $this->dnssec_payload_size : Lookups::DNS_MAX_UDP_SIZE);
                 if ( ($result === false) || ($size < Lookups::DNS_HEADER_SIZE) ) {
 
-                    throw new NetDns2Exception(
-                        $this->sock['tcp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-                    );
+                    //
+                    // if we get an error, then keeping this socket around for a future request, could cause
+                    // an error- for example, https://github.com/mikepultz/netdns2/issues/61
+                    //
+                    // in this case, the connection was timing out, which once it did finally respond, left
+                    // data on the socket, which could be captured on a subsequent request.
+                    //
+                    // since there's no way to "reset" a socket, the only thing we can do it close it.
+                    //
+                    $this->generateError(Socket::SOCK_STREAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
                 }
 
                 //
@@ -1238,12 +1280,10 @@ class NetDns2
         //
         } else {
 
-            $result = $this->sock['tcp'][$_ns]->read($size, ($this->dnssec == true) ? $this->dnssec_payload_size : Lookups::DNS_MAX_UDP_SIZE);
+            $result = $this->sock[Socket::SOCK_STREAM][$_ns]->read($size, ($this->dnssec == true) ? $this->dnssec_payload_size : Lookups::DNS_MAX_UDP_SIZE);
             if ( ($result === false) || ($size < Lookups::DNS_HEADER_SIZE) ) {
 
-                throw new NetDns2Exception(
-                    $this->sock['tcp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-                );
+                $this->generateError(Socket::SOCK_STREAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
             }
 
             //
@@ -1330,9 +1370,7 @@ class NetDns2
             //
             if ($this->sock['udp'][$_ns]->open() === false) {
 
-                throw new NetDns2Exception(
-                    $this->sock['udp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-                );
+                $this->generateError(Socket::SOCK_DGRAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
             }
         }
 
@@ -1341,9 +1379,7 @@ class NetDns2
         //
         if ($this->sock['udp'][$_ns]->write($_data) === false) {
 
-            throw new NetDns2Exception(
-                $this->sock['udp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-            );
+            $this->generateError(Socket::SOCK_DGRAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
         }
 
         //
@@ -1354,9 +1390,7 @@ class NetDns2
         $result = $this->sock['udp'][$_ns]->read($size, ($this->dnssec == true) ? $this->dnssec_payload_size : Lookups::DNS_MAX_UDP_SIZE);
         if (( $result === false) || ($size < Lookups::DNS_HEADER_SIZE)) {
 
-            throw new NetDns2Exception(
-                $this->sock['udp'][$_ns]->last_error, Lookups::E_NS_SOCKET_FAILED
-            );
+            $this->generateError(Socket::SOCK_DGRAM, $_ns, Lookups::E_NS_SOCKET_FAILED);
         }
 
         //
