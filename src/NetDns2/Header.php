@@ -254,22 +254,16 @@ class Header
      */
     public function get(Packet &$packet)
     {
-        $data = pack('n', $this->id) .
-            chr(
-                ($this->qr >> 7) | ($this->opcode >> 3) |
-                ($this->aa >> 2) | ($this->tc >> 1) | ($this->rd)
-            ) .
-            chr(
-                ($this->ra >> 7) | ($this->ad >> 5) | ($this->cd >> 4) | $this->rcode
-            ) .
-            chr($this->qdcount >> 8) . chr($this->qdcount) .
-            chr($this->ancount >> 8) . chr($this->ancount) .
-            chr($this->nscount >> 8) . chr($this->nscount) .
-            chr($this->arcount >> 8) . chr($this->arcount);
-
         $packet->offset += Lookups::DNS_HEADER_SIZE;
-
-        return $data;
+        return pack('n', $this->id) .
+            chr(
+                ($this->qr << 7) | ($this->opcode << 3) |
+                ($this->aa << 2) | ($this->tc << 1) | ($this->rd)
+            ) .
+            chr(
+                ($this->ra << 7) | ($this->ad << 5) | ($this->cd << 4) | $this->rcode
+            ) .
+            pack('n4', $this->qdcount, $this->ancount, $this->nscount, $this->arcount);
     }
 }
 

@@ -235,9 +235,9 @@ class Resolver extends NetDns2
             //
             foreach ($response->answer as $index => $object) {
 
-                if ( (strcasecmp($object->name, $name) == 0)
-                    && ($object->type == $type)
-                    && ($object->class == $class)
+                if ( (strcasecmp(trim($object->name, '.'), trim($packet->question[0]->qname, '.')) == 0)
+                    && ($object->type == $packet->question[0]->qtype)
+                    && ($object->class == $packet->question[0]->qclass)
                 ) {
                     $found = true;
                     break;
