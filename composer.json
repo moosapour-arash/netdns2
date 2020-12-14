@@ -30,7 +30,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Netdns2\\": "src/NetDns2/"
+            "NetDns2\\": "src/NetDns2/"
         }
     }
 }
